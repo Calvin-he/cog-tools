@@ -1,0 +1,45 @@
+<p class="ql-align-center">
+  <br>
+</p>
+<p class="ql-align-center">请将重复3遍但口音不同的单词听写下来</p>
+<p class="ql-align-center">
+  <br>
+</p>
+<p class="ql-align-center">
+  <strong style="color: rgb(255, 76, 0);">🍬=10个高频单词听写=3分钟</strong>
+</p>
+<p class="ql-align-center">
+  <br>
+</p>
+<p class="ql-align-center">欢迎
+  <strong style="color: rgb(255, 76, 0);">留言</strong>，把你的答案晒出来。</p>
+<p class="ql-align-center">
+  <br>
+</p>
+<p class="ql-align-center">正确答案明天揭晓。</p>
+<p class="ql-align-center">
+  <br>
+</p>
+{% if words %}
+<p class="ql-align-center">
+  <strong style="color: rgb(255, 76, 0);">昨日の答案</strong>
+</p>
+<p class="ql-align-center">
+<table class="table is-striped">
+  <thead>
+    <tr>
+      <th>单词</th><th>英音</th><th>美音</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for w in words %}
+    <tr>
+      <td>{{w.word}}</td>
+      <td>[{{w.phonetic_uk}}]</td>
+      <td>[{{w.phonetic_us}}]</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+</p>
+{% endif %}

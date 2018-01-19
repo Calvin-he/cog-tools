@@ -4,10 +4,11 @@ import os
 import sys
 import random
 import datetime
+import time
 from pymongo import MongoClient
 from pydub import AudioSegment
 
-MEDIA_DIR = '/home/www/ce/uploads'
+MEDIA_DIR = '/home/www/cog/public/media/'
 MODULE_DIR = os.path.dirname(os.path.realpath(__file__))
 COCA_DIRNAME = 'coca_audios'
 DB = MongoClient('localhost', 27017)['ce']
@@ -42,8 +43,14 @@ def merge_wordlist(words, export_filename):
     """ merge pronounciation of words
     """
     cursor = DB.words.find({'word': {'$in': words}})
+    # order words by original ordering
+    ordered_words = [w for w in cursor]
+    for wp in ordered_words:
+        idx = words.index(wp['word'])
+        wp['seq'] = idx
+    ordered_words.sort(key=lambda x: x['seq'])
     pronuns = []
-    for wp in cursor:
+    for wp in ordered_words:
         if not wp['_forvoResults']:
             raise Exception('No pronouciations for Word ' + wp['word'])
 
@@ -55,13 +62,11 @@ def merge_wordlist(words, export_filename):
     if not pronuns:
         return
 
-    audios = None
+    audios =  AudioSegment.empty()
     for p in pronuns:
         audio_path = p['audioPath'].replace('/media', MEDIA_DIR, 1)
-        if audios:
-            audios = audios + AudioSegment.from_file(audio_path, format='mp3')
-        else:
-            audios = AudioSegment.from_file(audio_path, format='mp3')
+        audios += AudioSegment.from_file(audio_path, format='mp3')
+    
     export_path = os.path.join(MEDIA_DIR, COCA_DIRNAME, export_filename)
     audios.export(export_path, format='mp3')
 
@@ -78,7 +83,7 @@ def run():
     """ main function
     """
     global progress_seq
-    word_list = get_wordlist(os.path.join(MODULE_DIR, 'words5000.txt'))
+    word_list = get_wordlist(os.path.join(MODULE_DIR, 'coca_words.txt'))
     read_progress()
     for i in xrange(progress_seq, len(word_list), 10):
         end = (i+10) if (i+10) < len(word_list) else len(word_list)
