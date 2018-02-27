@@ -35,6 +35,9 @@ class CogApi(object):
         res = self.http.post(self.base_url+'/lessons', json=lessonData)
         return res.json()
 
+    def set_series_lessons(self, seriesid, lessonid_list):
+        res = self.http.put(self.base_url+'/series/' + seriesid, json={'lessonList': lessonid_list})
+        return res.json
 
 class CocaLessonFactory(object):
     def __init__(self):
@@ -68,7 +71,7 @@ class CocaLessonFactory(object):
             premedia_path = "/media/coca_audios/COCAIII_%04d-%04d.mp3" % (prestart_idx, prend_idx)
             premedia = DB['media'].find_one({'path': premedia_path})
             lesson['mediaId2'] = str(premedia['_id'])
-            words = self.coca_words[prestart_idx-1:prend_idx+1]
+            words = self.coca_words[prestart_idx-1:prend_idx]
 
         lesson['title'] = u'Day %d🍬 %04d-%04d' % (nth, start_idx, end_idx)
         lesson['content'] = self.generate_content(words)
@@ -76,10 +79,25 @@ class CocaLessonFactory(object):
         print('Lesson created: ' + res['_id'])
         return res
 
+    def set_content(self, nth):
+        start_idx = nth*10 - 9
+        end_idx = start_idx + 9
+        prestart_idx, prend_idx = start_idx - 10, start_idx - 1
+        words = []
+        if prestart_idx > 0:
+            words = self.coca_words[prestart_idx-1:prend_idx]
+        title = u'Day %d🍬 %04d-%04d' % (nth, start_idx, end_idx)
+        content = self.generate_content(words)
+        DB['lessons'].update_one({'title': title}, {'$set':{'content': content}})
+
     def delete_lesson(self, nth):
         start_idx, end_idx = nth*10 - 9, nth*10
         title = u'Day %d🍬 %04d-%04d' % (nth, start_idx, end_idx)
         DB['lessons'].delete_one({'title': title})
+
+    def set_series_lessons(self, lessonid_list):
+        series = DB['series'].find_one({'title': u'COCA进阶（I）'})
+        return self.api_client.set_series_lessons(str(series['_id']), lessonid_list)
 
     def generate_content(self, words):
         res = DB['words'].find({'word': {'$in': words}}, ['word', 'phonetic_us', 'phonetic_uk'])
@@ -96,6 +114,9 @@ class CocaLessonFactory(object):
 
 if __name__ == '__main__':
     clf = CocaLessonFactory()
-    for i in range(100):
-        clf.create_lesson(i+1)
-    
+
+    lessonids = []
+    for i in range(1,100):
+        les = clf.set_content(i+1)
+    #     lessonids.append(les['_id'])
+    # clf.set_series_lessons(lessonids)
