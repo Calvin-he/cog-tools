@@ -95,8 +95,8 @@ class CocaLessonFactory(object):
         title = u'Day %d🍬 %04d-%04d' % (nth, start_idx, end_idx)
         DB['lessons'].delete_one({'title': title})
 
-    def set_series_lessons(self, lessonid_list):
-        series = DB['series'].find_one({'title': u'COCA进阶（I）'})
+    def set_series_lessons(self, lessonid_list, series_title):
+        series = DB['series'].find_one({'title': series_title})
         return self.api_client.set_series_lessons(str(series['_id']), lessonid_list)
 
     def generate_content(self, words):
@@ -116,7 +116,8 @@ if __name__ == '__main__':
     clf = CocaLessonFactory()
 
     lessonids = []
-    for i in range(1,100):
-        les = clf.set_content(i+1)
-    #     lessonids.append(les['_id'])
-    # clf.set_series_lessons(lessonids)
+    for i in range(400,500):
+        # les = clf.set_content(i+1)
+        les = clf.create_lesson(i+1)
+        lessonids.append(les['_id'])
+    clf.set_series_lessons(lessonids, u'COCA进阶（V）')
